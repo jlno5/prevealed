@@ -1,7 +1,7 @@
 {
     "name": "Prevealed",
     "version": "0.1.0",
-    "description": "Reveales all password fields",
+    "description": "Reveales passwords in password-fields as it is set up in the settings",
     "permissions": ["storage", "tabs", "activeTab"],
     "host_permissions": ["https://*/*"],
     "background": {
