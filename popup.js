@@ -63,6 +63,7 @@ const loadSettingsStates = function (url) {
         for (const key in settings) {
             console.log((key))
             document.getElementById(key).checked = settings[key];
+            activateInputs(document.querySelectorAll(`[id^="${key.replace("globaly", "this_site")}"]`))
         }
 
         // url specific settings
@@ -72,8 +73,16 @@ const loadSettingsStates = function (url) {
         console.log(urlSettings);
         for (const key in urlSettings) {
             console.log((key))
-            document.getElementById(key).checked = urlSettings[key];
+            console.log(urlSettings[key] + " setting xd");
+            const input = document.getElementById(key);
+            if (input) input.checked = urlSettings[key];
         }
+    });
+};
+
+const activateInputs = function (inputs) {
+    inputs.forEach(element => {
+        element.checked = true;
     });
 };
 
@@ -101,6 +110,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // url settings
     const urlSettings_inputs = document.getElementsByClassName("settings_checkbox_url");
+    // activateInputs(Array.from(urlSettings_inputs)); // actives the inputs and then deactivate them when they have certain settings
     changeEventHandlerToSwitchURL(Array.from(urlSettings_inputs));
 
     (async () => {

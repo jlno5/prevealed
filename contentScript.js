@@ -62,7 +62,7 @@
         console.log(type);
 
         if (type == "NEW") {
-            revealPasswordFields();    // also called at side refreshes
+            revealPasswordFields();    // also called at site refreshes
         }
 
         if (type == "SETTINGS") {
@@ -70,7 +70,7 @@
             if (!obj.setting) return;
             try {
                 switch (obj.setting) {
-                    case "reveal_all_passwords_this_side_permanent":
+                    case "reveal_all_passwords_this_site_permanent":
                     case "reveal_all_passwords_globaly":
                         if (obj.state) revealPasswordFields();
                         else hidePasswordFields();
