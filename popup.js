@@ -23,18 +23,9 @@ const settingsChange = async function (setting, state, urlCertain = false) {
         const url = new URL(await tabs[0].url);
         const cURL = url.hostname;
 
-        // Wrap the callback-based function in a Promise
-        function getExistingSettings() {
-            return new Promise((resolve) => {
-                chrome.storage.sync.get([cURL], function (result) {
-                    const existingURLPart = result[cURL] || {};
-                    resolve(existingURLPart);
-                });
-            });
-        }
-
         // Use async/await to retrieve and update the settings
-        const existingURLPart = await getExistingSettings();
+        let existingURLPart = await chrome.storage.sync.get([cURL]);
+        existingURLPart = existingURLPart[cURL] || {};
         const existingSettings = existingURLPart["settings"] || {};
         existingSettings[setting] = state;
 
@@ -52,14 +43,16 @@ const settingsChange = async function (setting, state, urlCertain = false) {
         );
     }
 
-    // Sending a message to the active tab
-    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-        const activeTab = tabs[0];
-        
-        if (activeTab) {
-            chrome.tabs.sendMessage(activeTab.id, { "type": "SETTINGS", "setting": setting, "state": state });
-        }
-    });
+    (() => {
+        // Sending a message to the active tab
+        chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+            const activeTab = tabs[0];
+            
+            if (activeTab) {
+                chrome.tabs.sendMessage(activeTab.id, { "type": "SETTINGS", "setting": setting, "state": state });
+            }
+        });
+    })();
 };
 
 const loadSettingsStates = function (url) {
@@ -93,8 +86,8 @@ const changeEventHandlerToSwitch = function (arr) {
     });
 };
 
-const changeEventHandlerToSwitchURL = function (urls) {
-    urls.forEach(element => {
+const changeEventHandlerToSwitchURL = function (arr) {
+    arr.forEach(element => {
         element.addEventListener('change', () => {
             settingsChange(element.id, element.checked, true);
         });
