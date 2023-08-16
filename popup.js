@@ -1,20 +1,56 @@
-const settingsChange = async function (setting, state) {
+const settingsChange = async function (setting, state, urlCertain = false) {
     console.log(setting);
-    // First, retrieve the existing settings
-    await chrome.storage.sync.get(["settings"], function(result) {
-        const existingSettings = result.settings || {};
+    console.log("hehex" + urlCertain + "hehehe");
+
+    if (!urlCertain) {
+        // First, retrieve the existing settings
+        await chrome.storage.sync.get(["settings"], function(result) {
+            const existingSettings = result.settings || {};
+            existingSettings[setting] = state; // changes the certain setting
+    
+            // Save the updated settings back to storage
+            chrome.storage.sync.set(
+                {
+                    "settings": existingSettings
+                },
+                () => {
+                    console.log("Setting saved");
+                }
+            );
+        });   
+    } else {
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        const url = new URL(await tabs[0].url);
+        const cURL = url.hostname;
+
+        // Wrap the callback-based function in a Promise
+        function getExistingSettings() {
+            return new Promise((resolve) => {
+                chrome.storage.sync.get([cURL], function (result) {
+                    const existingURLPart = result[cURL] || {};
+                    resolve(existingURLPart);
+                });
+            });
+        }
+
+        // Use async/await to retrieve and update the settings
+        const existingURLPart = await getExistingSettings();
+        const existingSettings = existingURLPart["settings"] || {};
         existingSettings[setting] = state;
+
+        existingURLPart["settings"] = existingSettings;
 
         // Save the updated settings back to storage
         chrome.storage.sync.set(
             {
-                "settings": existingSettings
+                [cURL]: existingURLPart
             },
             () => {
-                console.log("Setting saved");
+                console.log("URL specific Setting saved");
+                console.log(existingSettings);
             }
         );
-    });
+    }
 
     // Sending a message to the active tab
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
@@ -26,12 +62,24 @@ const settingsChange = async function (setting, state) {
     });
 };
 
-const loadSettingsStates = function () {
-    chrome.storage.sync.get(["settings"], function (result) {
-        let settings = result.settings;
+const loadSettingsStates = function (url) {
+    chrome.storage.sync.get(["settings", url], function (result) {
+        // global settings
+        const settings = result.settings;
         console.log(settings);
         for (const key in settings) {
+            console.log((key))
             document.getElementById(key).checked = settings[key];
+        }
+
+        // url specific settings
+        const urlResults = result[url] || {};
+        console.log(result)
+        const urlSettings = urlResults["settings"] || {};
+        console.log(urlSettings);
+        for (const key in urlSettings) {
+            console.log((key))
+            document.getElementById(key).checked = urlSettings[key];
         }
     });
 };
@@ -43,12 +91,34 @@ const changeEventHandlerToSwitch = function (arr) {
             settingsChange(element.id, element.checked)
         });
     });
-}
+};
+
+const changeEventHandlerToSwitchURL = function (urls) {
+    urls.forEach(element => {
+        element.addEventListener('change', () => {
+            settingsChange(element.id, element.checked, true);
+        });
+    });
+};
 
 document.addEventListener("DOMContentLoaded", function () {
-    let settings_inputs = document.getElementsByClassName("settings_checkbox");
-
+    // global settings
+    const settings_inputs = document.getElementsByClassName("settings_checkbox");
     changeEventHandlerToSwitch(Array.from(settings_inputs));
-    loadSettingsStates();
+
+    // url settings
+    const urlSettings_inputs = document.getElementsByClassName("settings_checkbox_url");
+    changeEventHandlerToSwitchURL(Array.from(urlSettings_inputs));
+
+    (async () => {
+        console.log(await chrome.storage.sync.get());
+
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        const url = new URL(await tabs[0].url);
+        const cURL = url.hostname;
+
+        // cURL = current url
+        loadSettingsStates(cURL);
+    })();
 });
 
