@@ -67,9 +67,15 @@
 
         if (type == "SETTINGS") {
             console.log(obj.setting + " " + obj.state)
-            if (obj.setting && obj.setting == "reveal_all_passwords_globaly") {
-                if (obj.state) revealPasswordFields();
-                else hidePasswordFields();
+            if (!obj.setting) return;
+            switch (obj.setting) {
+                case "reveal_all_passwords_globaly":
+                    if (obj.state) revealPasswordFields();
+                    else hidePasswordFields();
+                    break;
+                case "reveal_all_passwords_this_side_permanent":
+                    
+                    break;
             }
         }
 

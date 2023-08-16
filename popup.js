@@ -51,3 +51,4 @@ document.addEventListener("DOMContentLoaded", function () {
     changeEventHandlerToSwitch(Array.from(settings_inputs));
     loadSettingsStates();
 });
+
