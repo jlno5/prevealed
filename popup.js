@@ -45,12 +45,24 @@ const settingsChange = async function (setting, state, urlCertain = false) {
 
     (() => {
         // Sending a message to the active tab
-        chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        chrome.tabs.query({ active: true, currentWindow: true }, async function(tabs) {
             const activeTab = tabs[0];
-            
-            if (activeTab) {
-                chrome.tabs.sendMessage(activeTab.id, { "type": "SETTINGS", "setting": setting, "state": state });
+            if (!activeTab) return;
+            const cURL = new URL(activeTab.url).hostname;
+
+            const storage = (await chrome.storage.sync.get([cURL]))[cURL];
+            if (!storage || !storage.settings)
+                await chrome.tabs.sendMessage(activeTab.id, { "type": "SETTINGS", "setting": setting, "state": state });
+            else {
+                console.log(storage.settings)
+                if (storage.settings["reveal_all_passwords_this_site_permanent"] != undefined) {
+                    console.log("send a SETTING with the thisSidePasswordVisibility " + storage.settings["reveal_all_passwords_this_site_permanent"]);
+                    await chrome.tabs.sendMessage(activeTab.id, { "type": "SETTINGS", "setting": setting, "state": state, "thisSidePasswordVisibility": storage.settings["reveal_all_passwords_this_site_permanent"] });
+                } else {
+                    await chrome.tabs.sendMessage(activeTab.id, { "type": "SETTINGS", "setting": setting, "state": state });
+                }
             }
+
         });
     })();
 };
