@@ -1,9 +1,9 @@
 (() => {
-    let passwordFields = [];
+    let passwordFields = document.querySelectorAll('input[type="password"]');
+    console.log(passwordFields)
+    console.log("passwordFields")
 
     const revealPasswordFields = function () {
-        passwordFields = document.querySelectorAll('input[type="password"]');
-
         passwordFields.forEach(originalInput => {
             originalInput.setAttribute("type", "text");
         });
@@ -63,6 +63,7 @@
 
         if (type == "NEW") {
             revealPasswordFields();    // also called at site refreshes
+            console.log(obj.passwordFields);
         }
 
         if (type == "SETTINGS") {
@@ -73,7 +74,10 @@
                     case "reveal_all_passwords_this_site_permanent":
                     case "reveal_all_passwords_globaly":
                         if (obj.state) revealPasswordFields();
-                        else hidePasswordFields();
+                        else {
+                            hidePasswordFields();
+                            console.log("hidePasswordFields")
+                        }
                         break;
                     default:
                         console.log("default hitted")

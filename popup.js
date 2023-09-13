@@ -56,6 +56,9 @@ const settingsChange = async function (setting, state, urlCertain = false) {
 };
 
 const loadSettingsStates = function (url) {
+    const globalSettings = [];
+    const localSettings = [];
+
     chrome.storage.sync.get(["settings", url], function (result) {
         // global settings
         const settings = result.settings;
@@ -63,7 +66,14 @@ const loadSettingsStates = function (url) {
         for (const key in settings) {
             console.log((key))
             document.getElementById(key).checked = settings[key];
-            activateInputs(document.querySelectorAll(`[id^="${key.replace("globaly", "this_site")}"]`))
+            activateInputs(document.querySelectorAll(`[id^="${key.replace("globaly", "this_site")}"]`));
+
+            (async () => {
+                const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+                const activeTab = tabs[0];
+    
+                chrome.tabs.sendMessage(activeTab.id, { "type": "SETTING", "setting": key, "state": settings[key] });
+            })();
         }
 
         // url specific settings
@@ -76,8 +86,17 @@ const loadSettingsStates = function (url) {
             console.log(urlSettings[key] + " setting xd");
             const input = document.getElementById(key);
             if (input) input.checked = urlSettings[key];
+
+            (async () => {
+                const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+                const activeTab = tabs[0];
+    
+                chrome.tabs.sendMessage(activeTab.id, { "type": "SETTING", "setting": key, "state": urlSettings[key] });
+            })();
         }
     });
+
+
 };
 
 const activateInputs = function (inputs) {
